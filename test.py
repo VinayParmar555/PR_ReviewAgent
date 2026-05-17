@@ -3,7 +3,10 @@ def helloworld():
 
 print(helloworld())
 
-def add(a,b):
-    return a+b
+def add
+(a,b):
+    return      a+b
 
-print(adding(1+2))
+        print(adding(1+2))
+        
+        
