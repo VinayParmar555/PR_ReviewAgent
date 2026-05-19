@@ -1,4 +1,5 @@
 import sqlite3
+import atexit
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.sqlite import SqliteSaver
 from schema.state import PRReviewState
@@ -6,6 +7,9 @@ from agents.diff_analyzer import diff_analyzer
 from agents.bug_detector import bug_detector
 from agents.style_reviewer import style_reviewer
 from agents.judge import judge
+
+conn = sqlite3.connect("checkpoint.db", check_same_thread=False)
+atexit.register(conn.close)
 
 def build_graph():
     workflow = StateGraph(PRReviewState)
@@ -24,7 +28,6 @@ def build_graph():
     workflow.add_edge("judge", END)
     
     # SQLite checkpointing
-    conn = sqlite3.connect("checkpoint.db", check_same_thread=False)
     checkpointer = SqliteSaver(conn)
     return workflow.compile(checkpointer=checkpointer)
         
