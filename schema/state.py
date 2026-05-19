@@ -13,6 +13,7 @@ class PRReviewState(BaseModel):
     bugs_found: Optional[List[str]] = Field(default=None, description="Agent 2 output")
     style_issues: Optional[List[str]] = Field(default=None, description="Agent 3 output")
     final_review: Optional[str] = Field(default=None, description="Agent 4 output")
+    review_summary: Optional[str] = Field(default=None, description="Summary of the final_review")
     comments_posted: bool = Field(default=False)
     
     messages: Annotated[List, add_messages] = Field(default=[])
