@@ -1,7 +1,8 @@
-import os
-from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
+import os
+from tools.github_mcp import post_pr_comment
+from openai import OpenAI
 
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -43,9 +44,27 @@ def judge(state):
             }
         ]
     )
-    
+
     final_review = response.choices[0].message.content
     
+    summary_response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "Summarize this PR review in 5-6 bullet points max. Keep it concise for GitHub comment."},
+            {"role": "user", "content": final_review}
+        ]
+    )
+
+    summary = summary_response.choices[0].message.content
+
+    posted = post_pr_comment(
+        repo_name=state.repo_name,
+        pr_number=state.pr_number,
+        comment=f"## 🤖 AI PR Review\n\n{summary}"
+    )
+    
     return {
-        "final_review": final_review
+        "final_review": final_review,
+        "review_summary" : summary,
+        "comments_posted": posted
     }
