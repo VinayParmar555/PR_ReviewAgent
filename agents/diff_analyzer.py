@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 from openai import OpenAI
-from tools.github_mcp import get_pr_diff, get_pr_info
+from tools.github_tools import get_pr_diff, get_pr_info
 
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
