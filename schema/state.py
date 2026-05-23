@@ -14,6 +14,7 @@ class PRReviewState(BaseModel):
     style_issues: Optional[List[str]] = Field(default=None, description="Agent 3 output")
     final_review: Optional[str] = Field(default=None, description="Agent 4 output")
     review_summary: Optional[str] = Field(default=None, description="Summary of the final_review")
+    review_id: Optional[str] = Field(default=None)
     comments_posted: bool = Field(default=False)
     
     messages: Annotated[List, add_messages] = Field(default=[])
