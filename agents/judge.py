@@ -1,8 +1,10 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-from tools.github_mcp import post_pr_comment
+from tools.github_tools import post_pr_comment
 from openai import OpenAI
+from memory.mongo_store import save_review_sync
+from memory.qdrant_store import store_review
 
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -63,8 +65,21 @@ def judge(state):
         comment=f"## 🤖 AI PR Review\n\n{summary}"
     )
     
+    state_with_review = state.model_copy(
+        update={
+            "final_review": final_review,
+            "review_summary" : summary,
+            "comments_posted" : posted,
+        }
+    )
+
+    review_id = save_review_sync(state_with_review)
+    point_id = store_review(state_with_review)
+
     return {
         "final_review": final_review,
         "review_summary" : summary,
-        "comments_posted": posted
+        "comments_posted": posted,
+        "review_id": review_id,
+        "point_id": point_id
     }
