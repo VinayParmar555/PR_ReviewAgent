@@ -3,6 +3,7 @@ load_dotenv()
 import os
 from openai import OpenAI
 from tools.github_tools import get_pr_diff, get_pr_info
+from memory.qdrant_store import search_similar_reviews
 
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -11,23 +12,29 @@ client = OpenAI(
 
 def diff_analyzer(state):
     """Agent 1 — Analyzes PR diff and understands what changed"""
-    
+
     pr_diff = get_pr_diff(state.repo_name, state.pr_number)
     pr_info = get_pr_info(state.repo_name, state.pr_number)
-    
-    SYSTEM_PROMPT = """
+
+    similar = search_similar_reviews(pr_diff[:500])
+    past_context = "\n".join([r["review_summary"] for r in similar]) if similar else "No past reviews found"
+
+    SYSTEM_PROMPT = f"""
     You are an expert code diff analyzer.
     Your job is to understand what changed in this PR and provide a clear summary.
-    
+
+    Similar past PR reviews for context:
+    {past_context}
+
     Analyze:
     1. What files were changed
     2. What new functions/classes were added
     3. What was modified or deleted
     4. The overall purpose of this PR
-    
+
     Be concise and technical.
     """
-    
+
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
