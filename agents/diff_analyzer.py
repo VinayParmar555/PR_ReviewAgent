@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 from openai import OpenAI
+from schema.state import PRReviewState
 from tools.github_tools import get_pr_diff, get_pr_info
 from memory.qdrant_store import search_similar_reviews
 
@@ -10,7 +11,7 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
-def diff_analyzer(state):
+def diff_analyzer(state: PRReviewState):
     """Agent 1 — Analyzes PR diff and understands what changed"""
 
     pr_diff = get_pr_diff(state.repo_name, state.pr_number)

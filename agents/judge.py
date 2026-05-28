@@ -3,6 +3,7 @@ load_dotenv()
 import os
 from tools.github_tools import post_pr_comment
 from openai import OpenAI
+from schema.state import PRReviewState
 from memory.mongo_store import save_review_sync
 from memory.qdrant_store import store_review
 
@@ -11,7 +12,7 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
-def judge(state):
+def judge(state: PRReviewState):
     """Agent 4 — Combines all reports and generates final review"""
     
     SYSTEM_PROMPT = """

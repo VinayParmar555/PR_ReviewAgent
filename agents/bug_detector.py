@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from schema.state import PRReviewState
 load_dotenv()
 
 client = OpenAI(
@@ -8,7 +9,7 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
-def bug_detector(state):
+def bug_detector(state: PRReviewState):
     """Agent 2 — Detects bugs, security issues and code smells"""
     
     SYSTEM_PROMPT = """

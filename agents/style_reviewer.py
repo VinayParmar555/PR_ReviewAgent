@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+from schema.state import PRReviewState
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,7 +9,7 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
-def style_reviewer(state):
+def style_reviewer(state: PRReviewState):
     """Agent 3 — Reviews code style, best practices and clean code"""
     
     SYSTEM_PROMPT = """
