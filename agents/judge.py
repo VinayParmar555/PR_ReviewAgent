@@ -1,11 +1,14 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import logging
 from tools.github_tools import post_pr_comment
 from openai import OpenAI
 from schema.state import PRReviewState
 from memory.mongo_store import save_review_sync
 from memory.qdrant_store import store_review
+
+logger = logging.getLogger(__name__)
 
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -74,8 +77,17 @@ def judge(state: PRReviewState):
         }
     )
 
-    review_id = save_review_sync(state_with_review)
-    point_id = store_review(state_with_review)
+    try:
+        review_id = save_review_sync(state_with_review)
+        logger.info(f"MongoDB saved: {review_id}")
+    except Exception as e:
+        logger.error(f"MongoDB save failed: {e}")
+
+    try:
+        point_id = store_review(state_with_review)
+        logger.info(f"Qdrant saved: {point_id}")
+    except Exception as e:
+        logger.error(f"Qdrant save failed: {e}")
 
     return {
         "final_review": final_review,
