@@ -1,7 +1,8 @@
 import warnings
 warnings.filterwarnings("ignore")
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from graph.workflow import graph
+from graph.background import run_review
 from schema.state import PRReviewState
 import logging
 
@@ -14,7 +15,7 @@ async def root():
     return {"status": "PR Review Agent is running"}
 
 @app.post("/webhook/github")
-async def github_webhook(request: Request):
+async def github_webhook(request: Request, background_tasks: BackgroundTasks):
     try:
         payload = await request.json()
     except Exception:
@@ -44,17 +45,17 @@ async def github_webhook(request: Request):
             }
         }
         
-        result = graph.invoke(state, config=config)
-        
+        background_tasks.add_task(run_review, state, config)
+
         return {
-            "status": "review_completed",
+            "status": "review_queued",
             "pr_number": pr_number,
-            "verdict": result["final_review"][:100]
+            "message": "Background review process started"
         }
 
     except Exception as e:
-        logger.error(f"Graph execution failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Review failed: {str(e)}")
+        logger.error(f"Failed to queue review: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to queue review: {str(e)}")
 
 @app.get("/review/{repo_owner}/{repo_name}/{pr_number}")
 async def manual_review(repo_owner: str, repo_name: str, pr_number: int):
