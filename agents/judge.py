@@ -1,5 +1,3 @@
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import logging
 from tools.github_tools import post_pr_comment
