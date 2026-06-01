@@ -1,5 +1,7 @@
 import warnings
 warnings.filterwarnings("ignore")
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
 from graph.workflow import graph
 from graph.background import run_review
