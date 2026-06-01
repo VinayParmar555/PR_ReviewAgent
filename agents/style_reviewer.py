@@ -1,8 +1,6 @@
 import os
 from openai import OpenAI
 from schema.state import PRReviewState
-from dotenv import load_dotenv
-load_dotenv()
 
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
