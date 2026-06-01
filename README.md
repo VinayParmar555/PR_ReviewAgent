@@ -26,40 +26,7 @@ When a Pull Request is opened or updated on GitHub, this system:
 
 ## Architecture
 
-```mermaid
-graph TD
-    A[👤 GitHub PR Opened/Synchronized] --> B[🌐 FastAPI Webhook Endpoint]
-    B --> C[🔄 Background Task Queue]
-    C --> D[🧠 LangGraph Orchestrator]
-
-    D --> E[🔍 Agent 1: Diff Analyzer]
-    E --> E1[GitHub API — fetch diff & PR info]
-    E --> E2[Qdrant — search similar past reviews]
-
-    E --> F[🐛 Agent 2: Bug Detector]
-    F --> F1[Analyze for bugs, security issues, edge cases]
-
-    F --> G[🎨 Agent 3: Style Reviewer]
-    G --> G1[Check PEP 8, type hints, docstrings, naming]
-
-    G --> H[⚖️ Agent 4: Judge]
-    H --> H1[Synthesize all reports]
-    H --> H2[Generate verdict + summary]
-    H --> H3[Post comment to GitHub PR]
-    H --> H4[Save to MongoDB + Qdrant]
-
-    subgraph Memory & Storage
-        I[🔷 Qdrant — Semantic search over past reviews]
-        J[🍃 MongoDB — PR history, metadata, acceptance rate]
-        K[📊 LangSmith — Full agent traces & observability]
-        L[💾 SQLite — LangGraph checkpointing]
-    end
-
-    H4 --> I
-    H4 --> J
-    D -.->|Traces| K
-    D -.->|State| L
-```
+![Architecture](https://raw.githubusercontent.com/VinayParmar555/RyzenDOC/main/MERMAIDPNG.png)
 
 ---
 
