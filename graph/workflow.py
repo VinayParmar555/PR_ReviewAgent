@@ -23,7 +23,8 @@ def build_graph():
     # Edges
     workflow.set_entry_point("diff_analyzer")
     workflow.add_edge("diff_analyzer", "bug_detector")
-    workflow.add_edge("bug_detector", "style_reviewer")
+    workflow.add_edge("diff_analyzer", "style_reviewer")
+    workflow.add_edge("bug_detector", "judge")
     workflow.add_edge("style_reviewer", "judge")
     workflow.add_edge("judge", END)
     
