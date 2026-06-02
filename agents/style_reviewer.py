@@ -44,7 +44,7 @@ def style_reviewer(state: PRReviewState):
         ]
     )
     
-    style_issues = response.choices[0].message.content
+    # style_issues = response.choices[0].message.content
     
     return {
         "style_issues": [style_issues]
