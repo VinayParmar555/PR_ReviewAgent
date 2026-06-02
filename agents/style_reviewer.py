@@ -31,12 +31,12 @@ def style_reviewer(state: PRReviewState):
     Be constructive and educational.
     """
     
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"""
-                Diff Analysis:
+    # response = client.chat.completions.create(
+    #     model="llama-3.3-70b-versatile",
+    #     messages=[
+    #         {"role": "system", "content": SYSTEM_PROMPT},
+    #         {"role": "user", "content": f"""
+    #             Diff Analysis:
                 {state.diff_analysis}
                 Raw Diff:
                 {state.pr_diff}"""
