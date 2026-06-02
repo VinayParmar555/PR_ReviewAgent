@@ -1,13 +1,11 @@
 import os
 from openai import OpenAI
 from schema.state import PRReviewState
-from dotenv import load_dotenv
-load_dotenv()
 
-client = OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
+# client = OpenAI(
+#     api_key=os.getenv("GROQ_API_KEY"),
+#     base_url="https://api.groq.com/openai/v1"
+# )
 
 def style_reviewer(state: PRReviewState):
     """Agent 3 — Reviews code style, best practices and clean code"""
@@ -31,12 +29,12 @@ def style_reviewer(state: PRReviewState):
     Be constructive and educational.
     """
     
-    # response = client.chat.completions.create(
-    #     model="llama-3.3-70b-versatile",
-    #     messages=[
-    #         {"role": "system", "content": SYSTEM_PROMPT},
-    #         {"role": "user", "content": f"""
-    #             Diff Analysis:
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"""
+                Diff Analysis:
                 {state.diff_analysis}
                 Raw Diff:
                 {state.pr_diff}"""
@@ -44,7 +42,7 @@ def style_reviewer(state: PRReviewState):
         ]
     )
     
-    # style_issues = response.choices[0].message.content
+    style_issues = response.choices[0].message.content
     
     return {
         "style_issues": [style_issues]
