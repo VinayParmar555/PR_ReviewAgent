@@ -2,10 +2,10 @@ import os
 from openai import OpenAI
 from schema.state import PRReviewState
 
-client = OpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
+# client = OpenAI(
+#     api_key=os.getenv("GROQ_API_KEY"),
+#     base_url="https://api.groq.com/openai/v1"
+# )
 
 def style_reviewer(state: PRReviewState):
     """Agent 3 — Reviews code style, best practices and clean code"""
