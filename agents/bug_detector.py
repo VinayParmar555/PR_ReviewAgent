@@ -45,7 +45,7 @@ def bug_detector(state: PRReviewState):
     #     ]
     )
     
-    bugs = response.choices[0].message.content
+    # bugs = response.choices[0].message.content
     
     return {
         "bugs_found": [bugs]
