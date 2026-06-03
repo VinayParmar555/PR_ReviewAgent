@@ -32,17 +32,17 @@ def bug_detector(state: PRReviewState):
     """
     
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"""
-                Diff Analysis:
-                {state.diff_analysis}
-                Raw Diff:
-                {state.pr_diff}
-            """}
-        ]
+    # response = client.chat.completions.create(
+    #     model="llama-3.3-70b-versatile",
+    #     messages=[
+    #         {"role": "system", "content": SYSTEM_PROMPT},
+    #         {"role": "user", "content": f"""
+    #             Diff Analysis:
+    #             {state.diff_analysis}
+    #             Raw Diff:
+    #             {state.pr_diff}
+    #         """}
+    #     ]
     )
     
     bugs = response.choices[0].message.content
