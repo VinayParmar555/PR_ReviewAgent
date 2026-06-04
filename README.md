@@ -185,7 +185,6 @@ Average P50 latency: ~15s
 
 ## Future Improvements
 
-- **Parallel execution** — Run bug_detector and style_reviewer simultaneously via LangGraph parallel edges (~40% latency reduction)
 - **Inline comments** — Post line-specific comments instead of general PR comments
 - **Webhook signature verification** — HMAC-SHA256 validation for production security
 - **Multi-language support** — Extend style reviewer to JavaScript, Go, Java
