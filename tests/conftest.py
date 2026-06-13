@@ -24,14 +24,14 @@ def mock_env_vars(monkeypatch):
 def sample_pr_diff():
     """A realistic PR diff for testing agents."""
     return """
-    File: app/database.py
+    File: services/deploy.py
     Status: modified
     Additions: 5
     Deletions: 1
     Diff:
-    - cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    + cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
-    + cursor.execute(f"DELETE FROM logs WHERE user = '{username}'")
+    - subprocess.run(["git", "clone", repo_url], check=True)
+    + os.system(f"git clone {repo_url} && cd {repo_name} && pip install -r requirements.txt")
+    + subprocess.run(f"curl {user_provided_url} | bash", shell=True)
     """
 
 
@@ -40,10 +40,10 @@ def sample_diff_analysis():
     """Sample output from Agent 1 (diff analyzer)."""
     return (
         "## Changes Summary\n"
-        "- Modified `app/database.py`\n"
-        "- Replaced parameterized queries with f-string SQL queries\n"
-        "- Added a DELETE statement using string interpolation\n"
-        "- **Purpose**: Refactoring database queries (introduces SQL injection risk)"
+        "- Modified `services/deploy.py`\n"
+        "- Replaced safe subprocess list-args with shell=True and os.system\n"
+        "- Added piping of untrusted URL content directly to bash\n"
+        "- **Purpose**: Simplifying deployment commands (introduces command injection risk)"
     )
 
 
@@ -51,10 +51,10 @@ def sample_diff_analysis():
 def sample_bugs_report():
     """Sample output from Agent 2 (bug detector)."""
     return (
-        "### Bug 1: SQL Injection Vulnerability\n"
-        "The code uses f-string formatting for SQL queries which is a critical "
-        "security vulnerability. User input is directly interpolated into SQL.\n"
-        "**Fix**: Use parameterized queries with `?` placeholders."
+        "### Bug 1: Command Injection Vulnerability\n"
+        "The code uses os.system() and shell=True with unsanitized user input "
+        "which is a critical security vulnerability. Attacker-controlled input is directly interpolated into shell commands.\n"
+        "**Fix**: Use subprocess.run() with list arguments and avoid shell=True."
     )
 
 
@@ -75,7 +75,7 @@ def sample_final_review():
     return (
         "## PR Review Summary\n\n"
         "### Critical Issues\n"
-        "- SQL Injection vulnerability in database.py\n\n"
+        "- Command injection vulnerability in deploy.py\n\n"
         "### Minor Issues\n"
         "- Missing type hints and docstrings\n\n"
         "### Verdict: REQUEST_CHANGES\n"
@@ -87,7 +87,7 @@ def sample_final_review():
 def sample_review_summary():
     """Sample review summary for GitHub comment."""
     return (
-        "- 🔴 Critical SQL injection vulnerability found\n"
+        "- 🔴 Critical command injection vulnerability found\n"
         "- Missing type hints\n"
         "- Missing docstrings\n"
         "- Verdict: REQUEST_CHANGES"
@@ -116,18 +116,18 @@ def mock_openai_client(mock_openai_response):
 def mock_github_pr():
     """Create a mock GitHub PR object with realistic attributes."""
     mock_pr = MagicMock()
-    mock_pr.title = "Refactor database queries"
-    mock_pr.body = "Simplified SQL queries using f-strings"
+    mock_pr.title = "Simplify deployment script"
+    mock_pr.body = "Consolidated deployment steps into single shell commands"
     mock_pr.user.login = "testuser"
     mock_pr.base.ref = "main"
-    mock_pr.head.ref = "feature/db-refactor"
+    mock_pr.head.ref = "feature/deploy-simplify"
     mock_pr.changed_files = 1
     mock_pr.additions = 5
     mock_pr.deletions = 1
 
     # Mock file in the PR
     mock_file = MagicMock()
-    mock_file.filename = "app/database.py"
+    mock_file.filename = "services/deploy.py"
     mock_file.status = "modified"
     mock_file.additions = 5
     mock_file.deletions = 1
