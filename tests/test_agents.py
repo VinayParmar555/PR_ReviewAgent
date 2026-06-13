@@ -22,7 +22,7 @@ class TestDiffAnalyzer:
         }
         mock_search.return_value = []
         mock_client.chat.completions.create.return_value = mock_openai_response(
-            "Analysis: file modified with SQL changes"
+            "Analysis: deployment script modified with shell commands"
         )
 
         from agents.diff_analyzer import diff_analyzer
@@ -47,7 +47,7 @@ class TestDiffAnalyzer:
             "title": "Test", "description": "", "author": "dev", "files_changed": 1
         }
         mock_search.return_value = [
-            {"review_summary": "Past review: found SQL injection"}
+            {"review_summary": "Past review: found command injection"}
         ]
         mock_client.chat.completions.create.return_value = mock_openai_response("Analysis result")
 
@@ -58,7 +58,7 @@ class TestDiffAnalyzer:
         mock_client.chat.completions.create.assert_called_once()
         call_args = mock_client.chat.completions.create.call_args
         system_prompt = call_args.kwargs["messages"][0]["content"]
-        assert "Past review: found SQL injection" in system_prompt
+        assert "Past review: found command injection" in system_prompt
 
     @patch("agents.diff_analyzer.search_similar_reviews")
     @patch("agents.diff_analyzer.get_pr_info")
@@ -92,7 +92,7 @@ class TestBugDetector:
     ):
         """Should return dict with 'bugs_found' key containing a list."""
         mock_client.chat.completions.create.return_value = mock_openai_response(
-            "SQL injection vulnerability detected"
+            "Command injection vulnerability detected"
         )
 
         from schema.state import PRReviewState
@@ -110,7 +110,7 @@ class TestBugDetector:
         assert "bugs_found" in result
         assert isinstance(result["bugs_found"], list)
         assert len(result["bugs_found"]) == 1
-        assert "SQL injection" in result["bugs_found"][0]
+        assert "Command injection" in result["bugs_found"][0]
 
     @patch("agents.bug_detector.client")
     def test_no_bugs_found(self, mock_client, mock_openai_response):
@@ -241,7 +241,7 @@ class TestJudge:
         """Should return dict with final_review, review_summary, etc."""
         mock_client.chat.completions.create.side_effect = [
             mock_openai_response("Final review with verdict: REQUEST_CHANGES"),
-            mock_openai_response("- Critical SQL injection\n- Verdict: REQUEST_CHANGES"),
+            mock_openai_response("- Critical command injection\n- Verdict: REQUEST_CHANGES"),
         ]
         mock_post.return_value = True
         mock_mongo.return_value = "mongo-id-456"
