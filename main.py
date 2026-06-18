@@ -76,7 +76,7 @@ async def manual_review(repo_owner: str, repo_name: str, pr_number: int):
         result = graph.invoke(state, config=config)
         
         return {
-            "status": "completed",
+                        "status": "completed",
             "summary": result["review_summary"],
             "comments_posted": result["comments_posted"]
-        }
+        
