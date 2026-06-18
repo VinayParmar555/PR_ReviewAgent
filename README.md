@@ -26,7 +26,7 @@ When a Pull Request is opened or updated on GitHub, this system:
 
 ## Architecture
 
-![Architecture](https://raw.githubusercontent.com/VinayParmar555/RyzenDOC/main/MERMAIDPNG.png)
+![Architecture](https://raw.githubusercontent.com/VinayParmar555/RyzenDOC/main/Untitled-2026-05-31-1911.svg)
 
 ---
 
