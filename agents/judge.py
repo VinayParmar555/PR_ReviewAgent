@@ -75,6 +75,9 @@ def judge(state: PRReviewState):
         }
     )
 
+    review_id = None
+    point_id = None
+
     try:
         review_id = save_review_sync(state_with_review)
         logger.info(f"MongoDB saved: {review_id}")
