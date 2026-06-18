@@ -80,9 +80,3 @@ async def manual_review(repo_owner: str, repo_name: str, pr_number: int):
             "summary": result["review_summary"],
             "comments_posted": result["comments_posted"]
         }
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
-    except Exception as e:
-        logger.error(f"Review failed for {full_repo} PR#{pr_number}: {e}")
-        raise HTTPException(status_code=500, detail=f"Review failed: {str(e)}")
