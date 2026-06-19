@@ -331,10 +331,7 @@ class TestJudge:
         self, mock_client, mock_post, mock_mongo, mock_qdrant,
         mock_openai_response, sample_pr_state_full
     ):
-        """BUG: judge.py uses review_id in return dict without a fallback
-        when save_review_sync fails, causing UnboundLocalError.
-        This test documents the current (buggy) behavior.
-        """
+        """When MongoDB save fails, review_id should default to None."""
         mock_client.chat.completions.create.side_effect = [
             mock_openai_response("review"),
             mock_openai_response("summary"),
@@ -344,9 +341,9 @@ class TestJudge:
         mock_qdrant.return_value = "qdrant-id"
 
         from agents.judge import judge
-        # Known bug: review_id is referenced before assignment in the return dict
-        with pytest.raises(UnboundLocalError):
-            judge(sample_pr_state_full)
+        result = judge(sample_pr_state_full)
+        assert result["review_id"] is None
+        assert result["point_id"] == "qdrant-id"
 
     @patch("agents.judge.store_review")
     @patch("agents.judge.save_review_sync")
@@ -356,10 +353,7 @@ class TestJudge:
         self, mock_client, mock_post, mock_mongo, mock_qdrant,
         mock_openai_response, sample_pr_state_full
     ):
-        """BUG: judge.py uses point_id in return dict without a fallback
-        when store_review fails, causing UnboundLocalError.
-        This test documents the current (buggy) behavior.
-        """
+        """When Qdrant save fails, point_id should default to None."""
         mock_client.chat.completions.create.side_effect = [
             mock_openai_response("review"),
             mock_openai_response("summary"),
@@ -369,9 +363,9 @@ class TestJudge:
         mock_qdrant.side_effect = Exception("Qdrant unavailable")
 
         from agents.judge import judge
-        # Known bug: point_id is referenced before assignment in the return dict
-        with pytest.raises(UnboundLocalError):
-            judge(sample_pr_state_full)
+        result = judge(sample_pr_state_full)
+        assert result["point_id"] is None
+        assert result["review_id"] == "mongo-id"
 
     @patch("agents.judge.store_review")
     @patch("agents.judge.save_review_sync")
