@@ -1,4 +1,7 @@
 import pytest
+import hmac
+import hashlib
+import json
 from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi.testclient import TestClient
 
@@ -147,3 +150,111 @@ class TestManualReviewEndpoint:
         # The state should have the full repo name
         assert state_arg.repo_name == "myorg/myproject"
         assert state_arg.pr_number == 42
+
+
+class TestStatsEndpoint:
+    """Tests for the GET /stats endpoint."""
+
+    @patch("main.MongoClient")
+    def test_stats_returns_data(self, mock_mongo_cls, client):
+        """Should return total_reviews, comments_posted, and success_rate."""
+        mock_collection = MagicMock()
+        mock_collection.count_documents.side_effect = lambda q: 10 if q == {} else 8
+        mock_db = MagicMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+        mock_client_inst = MagicMock()
+        mock_client_inst.__getitem__ = MagicMock(return_value=mock_db)
+        mock_mongo_cls.return_value = mock_client_inst
+
+        response = client.get("/stats")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_reviews"] == 10
+        assert data["comments_posted"] == 8
+        assert data["success_rate"] == "80.0%"
+
+    @patch("main.MongoClient")
+    def test_stats_empty_database(self, mock_mongo_cls, client):
+        """Should return 0% success_rate when no reviews exist."""
+        mock_collection = MagicMock()
+        mock_collection.count_documents.return_value = 0
+        mock_db = MagicMock()
+        mock_db.__getitem__ = MagicMock(return_value=mock_collection)
+        mock_client_inst = MagicMock()
+        mock_client_inst.__getitem__ = MagicMock(return_value=mock_db)
+        mock_mongo_cls.return_value = mock_client_inst
+
+        response = client.get("/stats")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_reviews"] == 0
+        assert data["success_rate"] == "0%"
+
+    @patch("main.MongoClient")
+    def test_stats_database_failure(self, mock_mongo_cls, client):
+        """Should return 500 when MongoDB is unreachable."""
+        mock_mongo_cls.side_effect = Exception("Connection refused")
+
+        response = client.get("/stats")
+        assert response.status_code == 500
+
+
+class TestWebhookSignatureVerification:
+    """Tests for HMAC-SHA256 webhook signature verification."""
+
+    def _sign_payload(self, payload: dict, secret: str) -> str:
+        """Helper to compute GitHub-style HMAC signature."""
+        body = json.dumps(payload).encode("utf-8")
+        digest = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+        return f"sha256={digest}"
+
+    def test_valid_signature_accepted(self, webhook_payload_opened):
+        """Webhook with valid HMAC signature should be accepted."""
+        secret = "test-webhook-secret"
+        # Compute signature over the exact bytes that will be sent
+        body = json.dumps(webhook_payload_opened).encode("utf-8")
+        digest = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+        sig = f"sha256={digest}"
+
+        with patch("graph.workflow.build_graph") as mock_build, \
+             patch("graph.workflow.conn"), \
+             patch("main.graph"), \
+             patch("main.run_review", new_callable=AsyncMock), \
+             patch("main.WEBHOOK_SECRET", secret):
+            mock_build.return_value = MagicMock()
+            from main import app
+            test_client = TestClient(app)
+            response = test_client.post(
+                "/webhook/github",
+                content=body,
+                headers={
+                    "X-Hub-Signature-256": sig,
+                    "Content-Type": "application/json",
+                },
+            )
+            assert response.status_code == 200
+            assert response.json()["status"] == "review_queued"
+
+    def test_invalid_signature_rejected(self, webhook_payload_opened):
+        """Webhook with wrong signature should return 401."""
+        with patch("graph.workflow.build_graph") as mock_build, \
+             patch("graph.workflow.conn"), \
+             patch("main.graph"), \
+             patch("main.run_review", new_callable=AsyncMock), \
+             patch("main.WEBHOOK_SECRET", "real-secret"):
+            mock_build.return_value = MagicMock()
+            from main import app
+            test_client = TestClient(app)
+            response = test_client.post(
+                "/webhook/github",
+                json=webhook_payload_opened,
+                headers={"X-Hub-Signature-256": "sha256=badsignature"},
+            )
+            assert response.status_code == 401
+
+    def test_no_secret_skips_verification(self, client, webhook_payload_opened):
+        """When GITHUB_WEBHOOK_SECRET is not set, signature check is skipped."""
+        with patch("main.WEBHOOK_SECRET", None):
+            response = client.post("/webhook/github", json=webhook_payload_opened)
+            assert response.status_code == 200
+            assert response.json()["status"] == "review_queued"
